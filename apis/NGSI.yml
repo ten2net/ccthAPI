@@ -1,0 +1,2835 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: 基于NGSI规范的通用API
+  description: 该API是为了推进数字高新项目开放平台而设计的
+# host: orion.lab.fiware.org
+# basePath: /
+# schemes:
+#   - http
+consumes:
+  - application/json  develop ccthAPI
+produces:
+  - application/json
+paths:
+  /v2:
+    get:
+      description: 此资源没有任何属性。而是以JSON正文中的链接形式提供初始API可用性。建议遵循'curl'链接值，[链接](https://tools.ietf.org/html/rfc5988)或位置标题，其中适用于检索资源,而不是构建自己的URL，以保持客户端与实现细节分离。
+      summary: 检索API资源
+      tags:
+        - API Entry Point
+      operationId: 检索API资源
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/RetrieveApiResourcesResponse'
+          examples:
+            application/json:
+              entities_url: /v2/entities
+              types_url: /v2/types
+              subscriptions_url: /v2/subscriptions
+              registrations_url: /v2/registrations
+      x-unitTests:
+        - request:
+            method: GET
+            uri: /v2
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers:
+              Content-Type: application/json
+            body: >-
+              {  "entities_url": "/v2/entities",  "types_url": "/v2/types", 
+              "subscriptions_url": "/v2/subscriptions",  "registrations_url":
+              "/v2/registrations"}
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: 检索API资源1
+          x-testDescription: >-
+            此资源没有任何属性。而是以JSON正文中的链接形式提供初始API可用性。建议遵循\ u201curl \
+            u201d链接值， [链接](https://tools.ietf.org/html/rfc5988)或位置标题，其中\
+            n适用于检索资源。而不是构建自己的URL，以保持客户端与实现细节分离。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  /v2/entities:
+    get:
+      description: >-
+        通过id，类型，模式匹配(id或类型)and/or 与查询或地理查询匹配的实体来检索符合不同条件的实体列表(请参阅[Simple Query
+        Language](＃simple_query_language)和
+        [地理查询](#geographical_queries)。给定的实体必须匹配要检索的所有条件\
+        n(即，标准以逻辑AND方式组合)。注意模式匹配查询参数不兼容\
+        n(即相互排斥)及其对应的精确匹配参数，即带有`id`的`idPattern`和带有`type`的`typePattern`。\
+        n响应有效负载是每个匹配实体包含一个对象的数组。每个实体遵循\ JSON实体表示格式(在“JSON实体表示”部分中描述)。响应代码：
+        *成功操作使用200 OK  *错误使用非2xx和(可选)错误有效负载。请参阅小节\“错误回应\” 更多细节。
+      summary: 得到实体列表
+      tags:
+        - Entities
+      operationId: 列出实体
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: query
+          required: false
+          type: string
+          description: 以逗号分隔的元素列表。检索ID与列表中某个元素匹配的实体。与`idPattern`不兼容。
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 以逗号分隔的元素列表。检索其类型与列表中某个元素匹配的实体。与`typePattern`不兼容。
+        - name: idPattern
+          in: query
+          required: false
+          type: string
+          description: 正确格式化的正则表达式。检索ID与正则表达式匹配的实体。与`id`不兼容。
+        - name: typePattern
+          in: query
+          required: false
+          type: string
+          description: 正确格式化的正则表达式。检索类型与正则表达式匹配的实体。与`type`不兼容。
+        - name: q
+          in: query
+          required: false
+          type: string
+          description: >-
+            一个查询表达式，由一个语句列表组成，由`;`分隔，即q = statement1; statement2; statement3。\
+            n查看[Simple Query Language specification](＃simple_query_language)。
+        - name: mq
+          in: query
+          required: false
+          type: string
+          description: >-
+            属性元数据的查询表达式，由由`;`分隔的语句列表组成，即mq = statement1; statement2;
+            statement3。查看[简单查询语言规范](＃simple_query_language)。
+        - name: georel
+          in: query
+          required: false
+          type: string
+          description: '匹配实体和引用形状之间的空间关系。请参阅[地理查询](#geographical_queries)。'
+        - name: geometry
+          in: query
+          required: false
+          type: string
+          description: '查询受限的地理区域。请参阅[地理查询](#geographical_queries)。'
+        - name: coords
+          in: query
+          required: false
+          type: string
+          description: '纬度 - 经度列表由坐标分隔的坐标”;“。参见[地理查询](#geographical_queries)。'
+        - name: limit
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 限制要检索的实体数量
+        - name: offset
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 建立从检索实体的位置的偏移量
+        - name: attrs
+          in: query
+          required: false
+          type: string
+          description: >-
+            以逗号分隔的属性名称列表，其数据将包含在响应中。按照此参数指定的顺序检索属性。如果未包含此参数，则以任意方式检索属性命令。\
+            n请参阅“过滤属性和元数据”部分以获取更多详细信息。
+        - name: metadata
+          in: query
+          required: false
+          type: string
+          description: 要包含在响应中的元数据名称列表。请参阅”过滤掉属性和元数据“部分以获取更多详细信息。
+        - name: orderBy
+          in: query
+          required: false
+          type: string
+          description: 排序结果的标准。请参阅”订购结果“部分了解详情。
+        - name: options
+          in: query
+          required: false
+          enum:
+            - count
+            - keyValues
+            - values
+            - unique
+          x-enum-elements:
+            - name: count
+              description: ''
+            - name: keyValues
+              description: ''
+            - name: values
+              description: ''
+            - name: unique
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ListEntitiesResponse'
+          examples:
+            application/json:
+              - type: Room
+                id: DC_S1-D41
+                temperature:
+                  value: 35.6
+                  type: Number
+                  metadata: {}
+              - type: Room
+                id: Boe-Idearium
+                temperature:
+                  value: 22.5
+                  type: Number
+                  metadata: {}
+              - type: Car
+                id: P-9873-K
+                speed:
+                  value: 100
+                  type: number
+                  metadata:
+                    accuracy:
+                      value: 2
+                      type: Number
+                    timestamp:
+                      value: '2015-06-04T07:20:27.378Z'
+                      type: DateTime
+      x-unitTests:
+        - request:
+            method: GET
+            uri: >-
+              /v2/entities?id=Boe_Idearium&type=Room&idPattern=Bode_.*&typePattern=Room_.*&q=temperature>40&mq=temperature.accuracy<0.9&georel=near&geometry=point&coords=41.390205,2.154007;48.8566,2.3522&limit=20&offset=20&attrs=seatNumber&metadata=accuracy&orderBy=temperature,!speed
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers:
+              Content-Type: application/json
+            body: >-
+              [ {   "type": "Room",   "id": "DC_S1-D41",   "temperature": {    
+              "value": 35.6,     "type": "Number",     "metadata": {}   } }, {  
+              "type": "Room",   "id": "Boe-Idearium",   "temperature": {    
+              "value": 22.5,     "type": "Number",     "metadata": {}   } }, {  
+              "type": "Car",   "id": "P-9873-K",   "speed": {     "value":
+              100,     "type": "number",     "metadata": {       "accuracy":
+              {         "value": 2,         "type": "Number"       },      
+              "timestamp": {         "value":
+              "2015-06-04T07:20:27.378Z",         "type": "DateTime"       }    
+              }   } }]
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: List Entities1
+          x-testDescription: >-
+            通过id，类型，模式匹配(id或类型)and
+            /或与查询或地理查询匹配的实体来检索符合不同条件的实体列表(请参阅[简单查询语言](＃ simple_query_language)和\
+            n [地理查询](#geographical_queries))。给定的实体必须匹配要检索的所有条件\
+            n(即，标准以逻辑AND方式组合)。注意模式匹配查询参数是与其对应的完全匹配参数不兼容\
+            n(即互斥)，即带有`id`的`idPattern`和带有`type`的`typePattern`。\
+            n响应有效载荷是每个匹配实体包含一个对象的数组。遵循JSON实体表示格式(在“JSON实体表示”部分中描述)。响应代码：
+            *成功操作使用200 OK  *错误使用非2xx和(可选)错误有效负载。关于\“错误回应\”的小节 更多细节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    post:
+      description: >-
+        payload是表示要创建的实体的对象。该对象遵循JSON实体表示格式(在”JSON实体表示“部分中描述)。响应：
+        *成功的操作使用201创建(如果未使用upsert选项)或204 No Content(如果使用
+        upsert选项).Response包含一个带有创建实体的URL的`Location`标题。
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅“错误响应”部分。
+      summary: 创建实体
+      tags:
+        - Entities
+      operationId: 创建实体
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateEntityRequest'
+        - name: options
+          in: query
+          required: false
+          enum:
+            - keyValues
+            - upsert
+          x-enum-elements:
+            - name: keyValues
+              description: ''
+            - name: upsert
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '204':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  '/v2/entities/{entityId}':
+    get:
+      description: >-
+        response是一个对象，表示由ID标识的实体。该对象遵循JSON实体表示格式(在”JSON实体表示“部分中描述)。\
+        n此操作必须仅返回一个实体元素，但是可能有多个具有same ID的实体(例如，具有相同ID但不同类型的实体)。\
+        n在这种情况下，将返回错误消息，HTTP状态代码设置为409 Conflict。Response： *成功的操作使用200 OK \
+        n *错误使用非2xx和(可选)错误有效负载。有关详细信息，请参阅“错误响应”部分。
+      summary: 检索实体
+      tags:
+        - Entities
+      operationId: 检索实体
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 要检索的实体的ID
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+        - name: attrs
+          in: query
+          required: false
+          type: string
+          description: >-
+            以逗号分隔的属性名称列表，其data必须包含在响应中。属性按照\
+            nthis参数指定的顺序检索。有关详细信息，请参阅”过滤属性和元数据“部分。 \
+            n如果不包含此参数，则以任意顺序检索属性，并且实体的所有属性都包含在响应中。
+        - name: metadata
+          in: query
+          required: false
+          type: string
+          description: 要包含在响应中的元数据名称列表。请参阅”过滤掉属性和元数据“部分以获取更多详细信息。
+        - name: options
+          in: query
+          required: false
+          enum:
+            - keyValues
+            - values
+            - unique
+          x-enum-elements:
+            - name: keyValues
+              description: ''
+            - name: values
+              description: ''
+            - name: unique
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/RetrieveEntityResponse'
+          examples:
+            application/json:
+              type: Room
+              id: Bcn_Welt
+              temperature:
+                value: 21.7
+                type: Number
+              humidity:
+                value: 60
+                type: Number
+              location:
+                value: '41.3763726, 2.1864475'
+                type: 'geo:point'
+                metadata:
+                  crs:
+                    value: WGS84
+                    type: Text
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    delete:
+      description: >-
+        删除实体。Response： * S.uccessful operation使用204 No Content  *
+        Errors使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅“错误响应”部分。
+      summary: 删除实体
+      tags:
+        - Entities
+      operationId: 删除实体
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 要删除的实体的ID
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+      responses:
+        '204':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  '/v2/entities/{entityId}/attrs':
+    get:
+      description: >-
+        这个请求类似于retreiving整个实体，但是这个请求省略了`id`和`type` fields。\
+        n就像获取整个实体的一般请求一样，这个操作必须只返回一个entity如果找到多个具有相同ID的实体(例如，具有same
+        ID但类型不同的实体)，则返回错误消息，HTTP状态代码设置为409 Conflict。Response：
+        *成功操作使用200 OK  *错误使用非2xx和(可选)错误有效负载。有关详细信息，请参阅\“错误响应\”小节。
+      summary: 检索实体属性
+      tags:
+        - Entities
+      operationId: 检索实体属性
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 要检索的实体的ID
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+        - name: attrs
+          in: query
+          required: false
+          type: string
+          description: >-
+            以逗号分隔的属性名称列表，其data将包含在响应中。属性按照此参数指定的顺序检索。\
+            n如果不包含此参数，则以任意方式检索属性订单，以及实体的所有属性都包含在响应中。\
+            n请参阅“过滤掉属性和元数据”部分以获取更多详细信息。
+        - name: metadata
+          in: query
+          required: false
+          type: string
+          description: 要包含在响应中的元数据名称列表。请参阅”过滤掉属性和元数据“部分以获取更多详细信息。
+        - name: options
+          in: query
+          required: false
+          enum:
+            - keyValues
+            - values
+            - unique
+          x-enum-elements:
+            - name: keyValues
+              description: ''
+            - name: values
+              description: ''
+            - name: unique
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/RetrieveEntityAttributesResponse'
+          examples:
+            application/json:
+              temperature:
+                value: 21.7
+                type: Number
+              humidity:
+                value: 60
+                type: Number
+              location:
+                value: '41.3763726, 2.1864475'
+                type: 'geo:point'
+                metadata:
+                  crs:
+                    value: WGS84
+                    type: Text
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    put:
+      description: >-
+        请求payload是一个表示新实体属性的对象。该对象遵循JSON实体表示格式(在上面的”JSON实体表示“中描述)，除了`n`和`type`不允许。\
+        n先前存在于实体中的属性将被删除并替换为request中的属性。Response： *成功操作使用204无内容
+        *错误使用非2xx和(可选)错误有效载荷。有关详细信息，请参阅\“错误响应\”小节。
+      summary: 替换所有实体属性
+      tags:
+        - Entities
+      operationId: 替换所有实体属性
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 有关实体的ID。
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/ReplaceAllEntityAttributesRequest'
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+        - name: options
+          in: query
+          required: false
+          enum:
+            - keyValues
+          x-enum-elements:
+            - name: keyValues
+              description: ''
+          type: string
+          description: 操作选项
+      responses:
+        '204':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    post:
+      description: >-
+        请求payload是表示要追加或更新的属性的对象。该对象遵循JSON实体表示格式(在”JSON实体表示“部分中描述)，除了`n`和`type`
+        `不允许。实体属性用有效负载中的属性更新，具体取决于是否使用`append`操作选项。
+        *如果未使用`append`：实体属性被更新(如果它们以前存在)或附加(如果它们以前不存在)与有效载荷中的那些。
+        *如果使用`append`(即严格附加语义)：有效载荷中的所有属性都不是\
+        n之前存在于实体中的是附加的。除此之外，如果有效负载中的某些属性已存在于实体中，则会返回错误。响应： *成功操作使用204无内容\
+        n *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅“错误响应”部分。
+      summary: 更新或附加实体属性
+      tags:
+        - Entities
+      operationId: 更新或附加实体属性
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 要更新的实体ID
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/UpdateOrAppendEntityAttributesRequest'
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+        - name: options
+          in: query
+          required: false
+          enum:
+            - append
+            - keyValues
+          x-enum-elements:
+            - name: append
+              description: ''
+            - name: keyValues
+              description: ''
+          type: string
+          description: 操作选项
+      responses:
+        '204':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    patch:
+      description: >-
+        请求payload是表示要更新的属性的对象。该对象遵循JSON实体表示格式(在”JSON实体表示“部分中描述)，除了`n`和`type`是不允许。\
+        n实体属性用有效负载中的实体属性更新。除此之外，如果有效负载中的一个或多个attributes不存在于实体中，则返回错误。\
+        nResponse： *成功操作使用204 No Content 
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅“错误响应”部分。
+      summary: 更新现有实体属性
+      tags:
+        - Entities
+      operationId: 更新现有实体属性
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 要更新的实体的ID
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/UpdateExistingEntityAttributesRequest'
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+        - name: options
+          in: query
+          required: false
+          enum:
+            - keyValues
+          x-enum-elements:
+            - name: keyValues
+              description: ''
+          type: string
+          description: 操作选项
+      responses:
+        '204':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  '/v2/entities/{entityId}/attrs/{attrName}':
+    get:
+      description: >-
+        返回带有属性的属性数据的JSON对象。该对象遵循属性的JSON 表示(在”JSON属性表示“部分中描述)。响应：
+        *成功的操作使用200 OK 。 *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅\“错误响应\”小节。
+      summary: 获取属性数据
+      tags:
+        - Attributes
+      operationId: 获取属性数据
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 实体Id
+        - name: attrName
+          in: path
+          required: true
+          type: string
+          description: 要检索的属性的名称。
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+        - name: metadata
+          in: query
+          required: false
+          type: string
+          description: 要包含在响应中的元数据名称列表。请参阅”过滤掉属性和元数据“部分以获取更多详细信息。
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/GetAttributeDataResponse'
+          examples:
+            application/json:
+              value: 21.7
+              type: Number
+              metadata: {}
+      x-unitTests:
+        - request:
+            method: GET
+            uri: /v2/entities/Bcn_Welt/attrs/temperature?metadata=accuracy
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers:
+              Content-Type: application/json
+            body: '{  "value": 21.7,  "type": "Number",  "metadata": {}}'
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: Get attribute data1
+          x-testDescription: >-
+            返回带有属性的属性数据的JSON对象。该对象遵循属性的JSON 表示(在”JSON属性表示“部分中描述)。响应：
+            *成功的操作使用200 OK。 *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅\“错误响应\”小节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    put:
+      description: >-
+        请求有效负载是表示新属性数据的对象。先前的属性数据由请求中的属性数据替换。该对象遵循属性的NSON表示\
+        n(在”JSON属性表示“中描述)部分)。响应： *成功的操作使用204无内容
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅\“错误响应\”小节。
+      summary: 更新属性数据
+      tags:
+        - Attributes
+      operationId: 更新属性数据
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 要更新的实体的ID
+        - name: attrName
+          in: path
+          required: true
+          type: string
+          description: 属性名称
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/UpdateAttributeDataRequest'
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+      responses:
+        '200':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    delete:
+      description: >-
+        删除实体属性。Response： *成功的操作使用204无内容
+        *错误使用非2xx和(可选)错误有效负载。请参阅\”错误响应\“的小节更多细节。
+      summary: 删除单个属性
+      tags:
+        - Attributes
+      operationId: 删除单个属性
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 实体Id
+        - name: attrName
+          in: path
+          required: true
+          type: string
+          description: 属性名称
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+      responses:
+        '204':
+          description: ''
+      x-unitTests:
+        - request:
+            method: DELETE
+            uri: /v2/entities/Bcn_Welt/attrs/temperature
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: NONE
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers: {}
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: Remove a Single Attribute1
+          x-testDescription: >-
+            删除实体属性。Response： *成功操作使用204无内容
+            *错误使用非2xx和(可选)错误有效负载。请参阅”错误响应“部分更多细节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  '/v2/entities/{entityId}/attrs/{attrName}/value':
+    get:
+      description: >-
+        此操作返回带有属性值的`value`属性。 *如果属性值为JSON数组或对象：
+        *如果`Accept`标题可以扩展为`application / json`或`text /
+        plain`将值作为JSON返回，其响应类型为application / json或text /
+        plain(取决于`Accept`标题中的第一个或者``/ json`中的第一个，如果是`Accept：* / *`)。
+        *否则返回HTTP错误\“406不可接受：接受的MIME类型：application / json，text / plain \”
+        *如果属性值是字符串，数字，null或布尔值： *如果`Accept`标题可以扩展为text /
+        plain，则返回值为text。如果是字符串，则在开头和结尾使用引号标记。 *否则返回HTTP错误\“406 Not
+        Acceptable ：接受的MIME类型：text / plain \“Response： *成功的操作使用200 OK。
+        *错误使用非2xx和(可选)错误有效负载。请参阅\”错误响应\“的小节更多细节。
+      summary: 获取属性值
+      tags:
+        - Attribute Value
+      operationId: 获取属性值
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 有关实体的ID
+        - name: attrName
+          in: path
+          required: true
+          type: string
+          description: 要检索的属性的名称。
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/GetAttributeValueResponse'
+          examples:
+            application/json:
+              address: Ronda de la Comunicacion s/n
+              zipCode: 28050
+              city: 马德里
+              country: 西班牙
+      x-unitTests:
+        - request:
+            method: GET
+            uri: /v2/entities/Bcn_Welt/attrs/address/value
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers:
+              Content-Type: application/json
+            body: >-
+              {  "address": "Ronda de la Comunicacion s/n",  "zipCode": 28050, 
+              "city": "Madrid",  "country": "Spain"}
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: Get Attribute Value1
+          x-testDescription: >-
+            此操作返回带有属性值的`value`属性。 *如果属性值是JSON数组或对象：
+            *如果`Accept`标题可以扩展为`application / json `或`text /
+            plain`将值作为JSON返回，其响应类型为application / json或text /
+            plain(取决于`Accept`标题中的第一个或者```/ json`中的第一个;如果是`Accept ：* / *`)。
+            *否则返回HTTP错误\“406不可接受：接受的MIME类型：application / json，text / plain \”
+            *如果属性值是字符串，数字，null或布尔值：  *如果`Accept`标题可以扩展为text /
+            plain，则将值作为文本返回。如果是字符串，则在开头和结尾使用引号标记。
+            *否则返回HTTP错误\“406不可接受：接受的MIME类型：text / plain \“Response：
+            *成功的操作使用200 OK。 *错误使用非2xx和(可选)错误有效负载。请参阅”错误响应“部分更多细节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    put:
+      description: >-
+        请求有效负载是新的属性值。 *如果请求有效负载MIME类型是`application / json`，则属性的值设置为\
+        n在有效负载中编码的JSON对象或数组(如果有效负载不是有效的JSON文档，则返回错误)。 *如果请求有效负载MIME类型为`text /
+        plain`，则以下算法应用于有效负载： *如果有效载荷以引号(`\“`)开头和结尾，则该值将被视为字符串\
+        n(引文标记本身不被视为字符串的一部分) *如果为”true“或”false“ `，该值被视为布尔值。
+        *如果为`null`，则该值为空。 *如果前三个测试“失败”，则将文本解释为数字。
+        *如果不是一个有效的数字，然后返回一个错误，并且属性的值不变。请求中的有效负载MIME类型在`Content-Type`
+        HTTP标头中指定。Response： *成功的操作使用204 No Content 
+        *错误你选择非2xx和(可选)错误有效载荷。有关更多详细信息，请参阅“错误响应”部分。
+      summary: 更新属性值
+      tags:
+        - Attribute Value
+      operationId: 更新属性值
+      produces:
+        - application/json
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          type: string
+          description: 要更新的实体的ID。
+        - name: attrName
+          in: path
+          required: true
+          type: string
+          description: 属性名称
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/UpdateAttributeValueRequest'
+        - name: type
+          in: query
+          required: false
+          type: string
+          description: 实体类型，以避免在存在多个具有相同实体ID的的情况下出现歧义。
+      responses:
+        '200':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  /v2/types/:
+    get:
+      description: >-
+        如果`values`选项未被使用，则此操作返回具有实体类型的JSON数组。每个元素是一个JSON对象，其中包含有关类型的信息：
+        *`type`：实体类型name。 *`attrs`：属性名称集以及此类型的所有实体，在a
+        JSON对象中表示，其对象的键是属性名称，其值包含此类属性的信息(特别是列表)具有该名称的属性使用的类型以及所有个实体)。
+        *`count`：属于该类型的实体数。如果使用`values`选项，则操作返回JSON数组使用实体类型names作为字符串列表。\
+        nResults按字母顺序按实体`type`排序。响应代码： *成功操作使用200 OK 
+        *错误使用非2xx和(可选)错误有效载荷。有关详细信息，请参阅\“错误响应\”小节。
+      summary: 列出实体类型
+      tags:
+        - Types
+      operationId: 列出实体类型
+      produces:
+        - application/json
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 限制要检索的类型数量。
+        - name: offset
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 跳过一些记录。
+        - name: options
+          in: query
+          required: false
+          enum:
+            - count
+            - values
+          x-enum-elements:
+            - name: count
+              description: ''
+            - name: values
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ListEntityTypesResponse'
+          examples:
+            application/json:
+              - type: Car
+                attrs:
+                  speed:
+                    types:
+                      - Number
+                  fuel:
+                    types:
+                      - gasoline
+                      - diesel
+                  temperature:
+                    types:
+                      - 'urn:phenomenum:temperature'
+                count: 12
+              - type: Room
+                attrs:
+                  pressure:
+                    types:
+                      - Number
+                  humidity:
+                    types:
+                      - percentage
+                  temperature:
+                    types:
+                      - 'urn:phenomenum:temperature'
+                count: 7
+      x-unitTests:
+        - request:
+            method: GET
+            uri: /v2/types/?limit=10&offset=20
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers:
+              Content-Type: application/json
+            body: >-
+              [  {    "type": "Car",    "attrs": {      "speed": {       
+              "types": [ "Number" ]      },      "fuel": {        "types": [
+              "gasoline", "diesel" ]      },      "temperature": {       
+              "types": [ "urn:phenomenum:temperature" ]      }    },    "count":
+              12  },  {    "type": "Room",    "attrs": {      "pressure":
+              {        "types": [ "Number" ]      },      "humidity": {       
+              "types": [ "percentage" ]      },      "temperature": {       
+              "types": [ "urn:phenomenum:temperature" ]      }    },    "count":
+              7  }]
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: List Entity Types1
+          x-testDescription: >-
+            如果`values`选项未被使用，则此操作返回具有实体类型的JSON数组。每个元素是一个JSON对象，其中包含有关类型的信息：\
+            n *`type`：实体类型名称。 *`attrs`：属性名称集以及此类型的所有实体，在a
+            JSON对象中表示，其对象的键是属性名称，其值包含此类属性的信息(特别是具有该名称的属性以及所有实体使用的类型列表。
+            *`count`：属于该类型的实体数。如果使用`values`选项，则操作返回JSON数组，实体类型\
+            nnames作为字符串列表。Results按字母顺序按实体`type`排序。Response代码：
+            *成功操作使用200 OK  *错误使用非2xx和(可选) )错误有效载荷。有关更多详细信息，请参阅\“错误响应\”小节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  '/v2/types/{entityType}':
+    get:
+      description: >-
+        此操作返回一个JSON对象，其中包含有关类型的信息： *`attrs`：属性名称集以及此类型的所有实体，在a
+        JSON对象中表示，其键是属性名称其值包含此类属性的信息(特别是具有该名称的属性与所有实体一起使用的类型列表)。
+        *`count`：属于该类型的实体数。 nResponse代码： *成功的操作使用200 OK 
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅\“错误响应\”小节。
+      summary: 检索实体类型
+      tags:
+        - Types
+      operationId: 检索实体类型
+      produces:
+        - application/json
+      parameters:
+        - name: entityType
+          in: path
+          required: true
+          type: string
+          description: 实体类型
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/RetrieveEntityTypeResponse'
+          examples:
+            application/json:
+              attrs:
+                pressure:
+                  types:
+                    - Number
+                humidity:
+                  types:
+                    - percentage
+                temperature:
+                  types:
+                    - 'urn:phenomenum:temperature'
+              count: 7
+      x-unitTests:
+        - request:
+            method: GET
+            uri: /v2/types/Room
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers:
+              Content-Type: application/json
+            body: '  {    "attrs": {      "pressure": {        "types": [ "Number" ]      },      "humidity": {        "types": [ "percentage" ]      },      "temperature": {        "types": [ "urn:phenomenum:temperature" ]      }    },    "count": 7  }'
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: Retrieve entity type1
+          x-testDescription: >-
+            此操作返回一个JSON对象，其中包含有关类型的信息： *`attrs`：属性名称集以及此类型的所有实体，在a
+            JSON对象中表示，其键为属性名称及其值包含此类属性的信息(特别是具有该名称的属性与所有实体一起使用的类型列表)。
+            *`count`：属于该类型的实体数量。Response代码： *成功的操作使用200 OK 
+            *错误使用非2xx和(可选)错误有效负载。有关详细信息，请参阅\“错误响应\”小节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  /v2/subscriptions:
+    get:
+      description: >-
+        返回系统中存在的所有订阅的列表。Response： *成功的操作使用200 OK 
+        *错误使用非2xx和(可选)错误有效负载。请参阅”错误响应\“更多细节。
+      summary: 列表订阅
+      tags:
+        - Subscriptions
+      operationId: 列表订阅
+      produces:
+        - application/json
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 限制要检索的订阅数
+        - name: offset
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 跳过一些订阅
+        - name: options
+          in: query
+          required: false
+          enum:
+            - count
+          x-enum-elements:
+            - name: count
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ListSubscriptionsResponse'
+          examples:
+            application/json:
+              - id: abcdefg
+                description: One subscription to rule them all
+                subject:
+                  entities:
+                    - id: Bcn_Welt
+                      type: Room
+                  condition:
+                    attrs:
+                      - 'temperature '
+                    expression:
+                      q: temperature>40
+                notification:
+                  httpCustom:
+                    url: 'http://localhost:1234'
+                    headers:
+                      X-MyHeader: foo
+                    qs:
+                      authToken: bar
+                  attrsFormat: keyValues
+                  attrs:
+                    - temperature
+                    - humidity
+                  timesSent: 12
+                  lastNotification: '2015-10-05T16:00:00Z'
+                  lastFailure: '2015-10-06T16:00:00Z'
+                expires: '2016-04-05T14:00:00Z'
+                status: failed
+                throttling: 5
+      x-unitTests:
+        - request:
+            method: GET
+            uri: /v2/subscriptions?limit=10&offset=20
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers: {}
+            body: >-
+              [  {    "id": "abcdefg",    "description": "One subscription to
+              rule them all",    "subject": {                         
+              "entities": [        {          "id": "Bcn_Welt",          "type":
+              "Room"        }      ],      "condition": {         "attrs": [
+              "temperature " ],         "expression": {            "q":
+              "temperature>40"         }      }    },    "notification": {     
+              "httpCustom": {        "url": "http://localhost:1234",       
+              "headers": {          "X-MyHeader": "foo"        },        "qs":
+              {          "authToken": "bar"        }      },      "attrsFormat":
+              "keyValues",      "attrs": ["temperature", "humidity"],     
+              "timesSent": 12,      "lastNotification":
+              "2015-10-05T16:00:00.00Z",      "lastFailure":
+              "2015-10-06T16:00:00.00Z"    },    "expires":
+              "2016-04-05T14:00:00.00Z",    "status": "failed",    "throttling":
+              5  }]
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: List Subscriptions1
+          x-testDescription: >-
+            返回系统中存在的所有订阅的列表。Response： *成功的操作使用200 OK 
+            *错误使用非2xx和(可选)错误有效负载。请参阅小节\“错误回应\”了解更多细节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    post:
+      description: >-
+        创建新订阅。订阅由JSON对象表示，如本节开头所述。Response： *成功操作使用201 Created 
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅\“错误响应\”小节。
+      summary: 创建订阅
+      tags:
+        - Subscriptions
+      operationId: 创建订阅
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateSubscriptionRequest'
+      responses:
+        '201':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  '/v2/subscriptions/{subscriptionId}':
+    get:
+      description: >-
+        响应是由JSON对象表示的订阅，如本节开头所述。Response： *成功的操作使用200 OK 
+        *错误使用非2xx和(可选)错误有效载荷。有关详细信息，请参阅\“错误响应\”小节。
+      summary: Retrieve Subscription
+      tags:
+        - Subscriptions
+      operationId: Retrieve Subscription
+      produces:
+        - application/json
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          type: string
+          description: subscription Id.
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: object
+          examples: {}
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    delete:
+      description: >-
+        取消订阅。Response： *成功的操作使用204 No Content 
+        *错误使用非2xx和(可选)错误有效负载。请参阅\”错误响应\“的小节  more细节。
+      summary: 删除订阅
+      tags:
+        - Subscriptions
+      operationId: 删除订阅
+      produces:
+        - application/json
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          type: string
+          description: subscription Id.
+      responses:
+        '204':
+          description: ''
+      x-unitTests:
+        - request:
+            method: DELETE
+            uri: /v2/subscriptions/abcdef
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: NONE
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers: {}
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: Delete subscription1
+          x-testDescription: >-
+            取消订阅。Response： *成功的操作使用204无内容
+            *错误使用非2xx和(可选)错误有效负载。请参阅\”错误响应\“的小节更多细节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    patch:
+      description: >-
+        只有请求中包含的字段在订阅中更新。响应： *成功操作使用204无内容
+        *错误使用非2xx和(可选)错误有效负载。请参阅小节\“错误回应\” 更多细节。
+      summary: 更新订阅
+      tags:
+        - Subscriptions
+      operationId: 更新订阅
+      produces:
+        - application/json
+      parameters:
+        - name: subscriptionId
+          in: path
+          required: true
+          type: string
+          description: subscription Id.
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/UpdateSubscriptionRequest'
+      responses:
+        '204':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  /v2/registrations:
+    get:
+      description: 列出系统中存在的所有上下文提供程序注册。
+      summary: 列表注册
+      tags:
+        - Registrations
+      operationId: 列表注册
+      produces:
+        - application/json
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 限制要检索的注册数量
+        - name: offset
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 跳过一些注册
+        - name: options
+          in: query
+          required: false
+          enum:
+            - count
+          x-enum-elements:
+            - name: count
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ListRegistrationsResponse'
+          examples:
+            application/json:
+              - id: abcdefg
+                description: Example Context Source
+                dataProvided:
+                  entities:
+                    - id: Bcn_Welt
+                      type: Room
+                  attrs:
+                    - temperature
+                provider:
+                  http:
+                    url: 'http://contextsource.example.org'
+                  supportedForwardingMode: all
+                expires: '2017-10-31T12:00:00'
+                status: active
+                forwardingInformation:
+                  timesSent: 12
+                  lastForwarding: '2017-10-06T16:00:00Z'
+                  lastSuccess: '2017-10-06T16:00:00Z'
+                  lastFailure: '2017-10-05T16:00:00Z'
+      x-unitTests:
+        - request:
+            method: GET
+            uri: /v2/registrations?limit=10&offset=20
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers: {}
+            body: >-
+              [  {    "id": "abcdefg",    "description": "Example Context
+              Source",    "dataProvided": {      "entities": [        {         
+              "id": "Bcn_Welt",          "type": "Room"        }      ],     
+              "attrs": [        "temperature"      ]    },    "provider": {     
+              "http": {        "url": "http://contextsource.example.org"     
+              },      "supportedForwardingMode": "all"    },    "expires":
+              "2017-10-31T12:00:00",    "status": "active",   
+              "forwardingInformation": {      "timesSent": 12,     
+              "lastForwarding": "2017-10-06T16:00:00.00Z",      "lastSuccess":
+              "2017-10-06T16:00:00.00Z",      "lastFailure":
+              "2017-10-05T16:00:00.00Z"    }  }]
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: List Registrations1
+          x-testDescription: 列出系统中存在的所有上下文提供程序注册。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    post:
+      description: >-
+        创建新的上下文提供程序注册。这通常用于绑定某些数据的上下文源as提供程序。注册由JSON对象表示，如本节开头所述。\
+        nResponse： *成功的操作使用201 Created 
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅\“错误响应\”小节。
+      summary: 创建注册
+      tags:
+        - Registrations
+      operationId: 创建注册
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/CreateRegistrationRequest'
+      responses:
+        '201':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  '/v2/registrations/{registrationId}':
+    get:
+      description: >-
+        响应是由JSON对象表示的注册，如本节开头所述。Response： *成功的操作使用200 OK 
+        *错误使用非2xx和(可选)错误有效载荷。有关详细信息，请参阅\“错误响应\”小节。
+      summary: 检索注册
+      tags:
+        - Registrations
+      operationId: 检索注册
+      produces:
+        - application/json
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          type: string
+          description: 注册ID。
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/RetrieveRegistrationResponse'
+          examples:
+            application/json:
+              id: abcdefg
+              description: 示例上下文源
+              dataProvided:
+                entities:
+                  - id: Bcn_Welt
+                    type: Room
+                attrs:
+                  - temperature
+              provider:
+                http:
+                  url: 'http://contextsource.example.org'
+                supportedForwardingMode: all
+              expires: '2017-10-31T12:00:00'
+              status: failed
+              forwardingInformation:
+                timesSent: 12
+                lastForwarding: '2017-10-06T16:00:00Z'
+                lastFailure: '2017-10-06T16:00:00Z'
+                lastSuccess: '2017-10-05T18:25:00Z'
+      x-unitTests:
+        - request:
+            method: GET
+            uri: /v2/registrations/abcdef
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: RAW
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers:
+              Content-Type: application/json
+            body: '  {        "id": "abcdefg",        "description": "Example Context Source",        "dataProvided": {          "entities": [            {              "id": "Bcn_Welt",              "type": "Room"            }          ],          "attrs": [            "temperature"          ]        },        "provider": {          "http": {            "url": "http://contextsource.example.org"          },          "supportedForwardingMode": "all"        },        "expires": "2017-10-31T12:00:00",        "status": "failed",        "forwardingInformation": {          "timesSent": 12,          "lastForwarding": "2017-10-06T16:00:00.00Z",          "lastFailure": "2017-10-06T16:00:00.00Z",          "lastSuccess": "2017-10-05T18:25:00.00Z",        }  }      '
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: Retrieve Registration1
+          x-testDescription: >-
+            响应是由JSON对象表示的注册，如本节开头所述。Response： *成功的操作使用200 OK 
+            *错误使用非2xx和(可选) )错误有效载荷。有关更多详细信息，请参阅\“错误响应\”小节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    delete:
+      description: >-
+        取消上下文provider registration。Response： *成功的操作使用204 No Content 
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅“错误响应”部分。
+      summary: 删除注册
+      tags:
+        - Registrations
+      operationId: 删除注册
+      produces:
+        - application/json
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          type: string
+          description: 注册ID
+      responses:
+        '204':
+          description: ''
+      x-unitTests:
+        - request:
+            method: DELETE
+            uri: /v2/registrations/abcdef
+          expectedResponse:
+            x-allowExtraHeaders: true
+            x-bodyMatchMode: NONE
+            x-arrayOrderedMatching: false
+            x-arrayCheckCount: false
+            x-matchResponseSchema: true
+            headers: {}
+          x-testShouldPass: true
+          x-testEnabled: true
+          x-testName: Delete Registration1
+          x-testDescription: >-
+            取消上下文提供程序注册。Response： *成功的操作使用204 No Content 
+            *错误使用非2xx和(可选)错误有效负载。请参阅”错误响应\“小节“为了更多细节。
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+    patch:
+      description: >-
+        只有请求中包含的字段才会在注册中更新。Response： *成功的操作使用204 No Content 
+        *错误使用非2xx和(可选)错误有效负载。请参阅第\“错误回应\” 更多细节。
+      summary: 更新注册
+      tags:
+        - Registrations
+      operationId: 更新注册
+      produces:
+        - application/json
+      parameters:
+        - name: registrationId
+          in: path
+          required: true
+          type: string
+          description: 注册ID
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/UpdateRegistrationRequest'
+      responses:
+        '204':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  /v2/op/update:
+    post:
+      description: >-
+        此操作允许在单个批处理操作中创建，更新和/或删除多个实体。有效负载是一个具有两个属性的对象：
+        +`actionType`，用于指定要执行的更新操作的类型：要么`append`，`appendStrict`，`update`，\
+        n`delete`，要么`replace`。 +`entities`，一个实体数组，每个实体使用JSON实体表示格式指定\
+        n(在section \“JSON Entity Representation \”)。\
+        n这个操作被分成与`entities`向量中的实体一样多的单独操作，因此`actionType`被执行为每个操作。取决于`actionType`，可以完成使用\
+        nnregular非批处理操作的映射： *`append`：映射到`POST / v2 /
+        entities`(如果实体尚不存在)或`POST / v2 / entities / <id> / attrs` (如果实体已存在)。\
+        n *`appendStrict`：映射到`POST / v2 / entities`(如果实体尚不存在)或`POST / v2 /
+        entities / <id> / attrs？options = append`(如果实体已经存在)。
+        *`update`：映射到`PATCH /v2/entities/<id>/attrs`.*`delete`：映射到`DELETE / v2 /
+        entities / <id> / attrs /
+        <如果实体中没有包含任何属性，则attrName>`对实体中包含的每个属性或`\到`DELETE / v2 / entities /
+        <id>`。 *`replace`：映射到`PUT / v2 / entities / <id>
+        /attrs`.Response:*成功的操作使用204 No Content。
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅“错误响应”部分。
+      summary: Update
+      tags:
+        - Batch Operations
+      operationId: Update
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/UpdateRequest'
+        - name: options
+          in: query
+          required: false
+          enum:
+            - keyValues
+          x-enum-elements:
+            - name: keyValues
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '204':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  /v2/op/query:
+    post:
+      description: >-
+        响应有效负载是一个数组，每个匹配的实体包含一个对象，如果找到实体，则为空数组`[]`。实体遵循JSON实体表示格式(在”\“部分中描述)
+        JSON实体表示\“)。有效负载可能包含以下元素(所有这些元素都是可选的)：
+        +`entities`：要搜索的entites列表。每个元素由一个JSON对象表示，其中包含个元素：
+        +`id`或`idPattern`：受影响实体的Id或模式。两者都不能在同一时间使用，但其中一个必须存在。
+        +`type`或`typePattern`：要搜索的实体的类型或类型。两者都不能在同时使用。如果省略，则表示“任何实体类型”。
+        +`attrs`：要提供的属性列表(如果没有)指定的，所有属性)。
+        +`expression`：由`q`，`mq`，`georel`，`geometry`和`coords`组成的表达式(参见上面关于这个f的“List
+         entities \”操作) ield)。 +`metadata`：要包含在响应中的元数据名称列表。\
+        n有关详细信息，请参阅“过滤掉属性和元数据”部分。响应代码： *成功的操作使用200 OK 
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅“错误响应”部分。
+      summary: Query
+      tags:
+        - Batch Operations
+      operationId: Query
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/QueryRequest'
+        - name: limit
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 限制要检索的实体数量。
+        - name: offset
+          in: query
+          required: false
+          type: number
+          format: double
+          exclusiveMaximum: false
+          exclusiveMinimum: false
+          description: 跳过一些记录。
+        - name: orderBy
+          in: query
+          required: false
+          type: string
+          description: 排序结果的标准。请参阅”订购结果“部分了解详情。
+        - name: options
+          in: query
+          required: false
+          enum:
+            - count
+            - keyValues
+            - values
+            - unique
+          x-enum-elements:
+            - name: count
+              description: ''
+            - name: keyValues
+              description: ''
+            - name: values
+              description: ''
+            - name: unique
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/QueryResponse'
+          examples:
+            application/json:
+              - type: Room
+                id: DC_S1-D41
+                temperature:
+                  value: 35.6
+                  type: Number
+              - type: Room
+                id: Boe-Idearium
+                temperature:
+                  value: 22.5
+                  type: Number
+              - type: Car
+                id: P-9873-K
+                temperature:
+                  value: 40
+                  type: Number
+                  accuracy: 2
+                  timestamp:
+                    value: '2015-06-04T07:20:27.378Z'
+                    type: DateTime
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+  /v2/op/notify:
+    post:
+      description: >-
+        此操作旨在使用通知有效负载，以便保留此通知所包含的所有实体数据，并在必要时进行覆盖。\
+        n当一个NGSIv2端点订阅另一个NGSIv2端点(联合方案)时，此操作很有用。请求有效负载必须是NGSIv2通知负载。\
+        n行为必须与`POST / v2 / op / update`完全相同，`actionType`等于`append`。\
+        nResponse代码： *成功的操作使用200 OK 
+        *错误使用非2xx和(可选)错误有效负载。有关更多详细信息，请参阅\“错误响应\”小节。
+      summary: 通知
+      tags:
+        - Batch Operations
+      operationId: 通知
+      produces:
+        - application/json
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          description: ''
+        - name: body
+          in: body
+          required: true
+          description: ''
+          schema:
+            $ref: '#/definitions/NotifyRequest'
+        - name: options
+          in: query
+          required: false
+          enum:
+            - keyValues
+          x-enum-elements:
+            - name: keyValues
+              description: ''
+          type: string
+          description: 选项词典
+      responses:
+        '200':
+          description: ''
+      x-unitTests: []
+      x-operation-settings:
+        CollectParameters: false
+        AllowDynamicQueryParameters: false
+        AllowDynamicFormParameters: false
+        IsMultiContentStreaming: false
+definitions:
+  RetrieveApiResourcesResponse:
+    title: 检索API资源响应
+    example:
+      entities_url: /v2/entities
+      types_url: /v2/types
+      subscriptions_url: /v2/subscriptions
+      registrations_url: /v2/registrations
+    type: object
+    properties:
+      entities_url:
+        description: 指向实体资源的URL
+        example: /v2/entities
+        type: string
+      types_url:
+        description: URL which points to the types resource
+        example: /v2/types
+        type: string
+      subscriptions_url:
+        description: 指向订阅资源的URL
+        example: /v2/subscriptions
+        type: string
+      registrations_url:
+        description: |-
+          URL which points to the
+          registrations resource
+        example: /v2/registrations
+        type: string
+    required:
+      - entities_url
+      - types_url
+      - subscriptions_url
+      - registrations_url
+  Options:
+    title: options
+    example: count
+    x-enum-elements:
+      - name: count
+        description: ''
+      - name: keyValues
+        description: ''
+      - name: values
+        description: ''
+      - name: unique
+        description: ''
+    type: string
+    enum:
+      - count
+      - keyValues
+      - values
+      - unique
+  ListEntitiesResponse:
+    title: 列出实体回复
+    example:
+      type: Room
+      id: DC_S1-D41
+      temperature:
+        value: 35.6
+        type: Number
+        metadata: {}
+    type: object
+    properties:
+      type:
+        description: ''
+        example: Room
+        type: string
+      id:
+        description: ''
+        example: DC_S1-D41
+        type: string
+      temperature:
+        description: ''
+        example:
+          value: 35.6
+          type: Number
+          metadata: {}
+        type: object
+      speed:
+        description: ''
+        example:
+          value: 100
+          type: number
+          metadata:
+            accuracy:
+              value: 2
+              type: Number
+            timestamp:
+              value: '2015-06-04T07:20:27.378Z'
+              type: DateTime
+        type: object
+    required:
+      - type
+      - id
+  Options3:
+    title: options3
+    example: keyValues
+    x-enum-elements:
+      - name: keyValues
+        description: ''
+      - name: upsert
+        description: ''
+    type: string
+    enum:
+      - keyValues
+      - upsert
+  CreateEntityRequest:
+    title: 创建实体请求
+    type: object
+    properties:
+      type:
+        description: ''
+        example: Room
+        type: string
+      id:
+        description: ''
+        example: Bcn-Welt
+        type: string
+      temperature:
+        description: ''
+        example:
+          value: 21.7
+        type: object
+      humidity:
+        description: ''
+        example:
+          value: 60
+        type: object
+      location:
+        description: ''
+        example:
+          value: '41.3763726, 2.1864475'
+          type: 'geo:point'
+          metadata:
+            crs:
+              value: WGS84
+        type: object
+    required:
+      - type
+      - id
+      - temperature
+      - humidity
+      - location
+  Options6:
+    title: options6
+    example: keyValues
+    x-enum-elements:
+      - name: keyValues
+        description: ''
+      - name: values
+        description: ''
+      - name: unique
+        description: ''
+    type: string
+    enum:
+      - keyValues
+      - values
+      - unique
+  RetrieveEntityResponse:
+    title: 检索实体响应
+    example:
+      type: Room
+      id: Bcn_Welt
+      temperature:
+        value: 21.7
+        type: Number
+      humidity:
+        value: 60
+        type: Number
+      location:
+        value: '41.3763726, 2.1864475'
+        type: 'geo:point'
+        metadata:
+          crs:
+            value: WGS84
+            type: Text
+    type: object
+    properties:
+      type:
+        description: ''
+        example: Room
+        type: string
+      id:
+        description: ''
+        example: Bcn_Welt
+        type: string
+      temperature:
+        description: ''
+        example:
+          value: 21.7
+          type: Number
+        type: object
+      humidity:
+        description: ''
+        example:
+          value: 60
+          type: Number
+        type: object
+      location:
+        description: ''
+        example:
+          value: '41.3763726, 2.1864475'
+          type: 'geo:point'
+          metadata:
+            crs:
+              value: WGS84
+              type: Text
+        type: object
+    required:
+      - type
+      - id
+      - temperature
+      - humidity
+      - location
+  RetrieveEntityAttributesResponse:
+    title: 检索实体属性响应
+    example:
+      temperature:
+        value: 21.7
+        type: Number
+      humidity:
+        value: 60
+        type: Number
+      location:
+        value: '41.3763726, 2.1864475'
+        type: 'geo:point'
+        metadata:
+          crs:
+            value: WGS84
+            type: Text
+    type: object
+    properties:
+      temperature:
+        description: ''
+        example:
+          value: 21.7
+          type: Number
+        type: object
+      humidity:
+        description: ''
+        example:
+          value: 60
+          type: Number
+        type: object
+      location:
+        description: ''
+        example:
+          value: '41.3763726, 2.1864475'
+          type: 'geo:point'
+          metadata:
+            crs:
+              value: WGS84
+              type: Text
+        type: object
+    required:
+      - temperature
+      - humidity
+      - location
+  Options10:
+    title: options10
+    example: append
+    x-enum-elements:
+      - name: append
+        description: ''
+      - name: keyValues
+        description: ''
+    type: string
+    enum:
+      - append
+      - keyValues
+  UpdateOrAppendEntityAttributesRequest:
+    title: 更新或附加实体属性请求
+    type: object
+    properties:
+      ambientNoise:
+        description: ''
+        example:
+          value: 31.5
+        type: object
+    required:
+      - ambientNoise
+  Options12:
+    title: options12
+    example: keyValues
+    x-enum-elements:
+      - name: keyValues
+        description: ''
+    type: string
+    enum:
+      - keyValues
+  UpdateExistingEntityAttributesRequest:
+    title: 更新现有实体属性请求
+    type: object
+    properties:
+      temperature:
+        description: ''
+        example:
+          value: 25.5
+        type: object
+      seatNumber:
+        description: ''
+        example:
+          value: 6
+        type: object
+    required:
+      - temperature
+      - seatNumber
+  ReplaceAllEntityAttributesRequest:
+    title: 替换所有实体属性请求
+    type: object
+    properties:
+      temperature:
+        description: ''
+        example:
+          value: 25.5
+        type: object
+      seatNumber:
+        description: ''
+        example:
+          value: 6
+        type: object
+    required:
+      - temperature
+      - seatNumber
+  GetAttributeDataResponse:
+    title: 获取属性数据响应
+    example:
+      value: 21.7
+      type: Number
+      metadata: {}
+    type: object
+    properties:
+      value:
+        description: ''
+        example: 21.7
+        type: number
+        format: double
+      type:
+        description: ''
+        example: Number
+        type: string
+      metadata:
+        description: ''
+        example: {}
+        type: object
+    required:
+      - value
+      - type
+      - metadata
+  UpdateAttributeDataRequest:
+    title: 更新属性数据请求
+    type: object
+    properties:
+      value:
+        description: ''
+        example: 25
+        type: number
+        format: double
+      metadata:
+        description: ''
+        example:
+          unitCode:
+            value: CEL
+        type: object
+    required:
+      - value
+      - metadata
+  GetAttributeValueResponse:
+    title: 获取属性值响应
+    example:
+      address: Ronda de la Comunicacion s/n
+      zipCode: 28050
+      city: Madrid
+      country: Spain
+    type: object
+    properties:
+      address:
+        description: ''
+        example: Ronda de la Comunicacion s/n
+        type: string
+      zipCode:
+        description: ''
+        example: 28050
+        type: integer
+        format: int32
+      city:
+        description: ''
+        example: Madrid
+        type: string
+      country:
+        description: ''
+        example: Spain
+        type: string
+    required:
+      - address
+      - zipCode
+      - city
+      - country
+  UpdateAttributeValueRequest:
+    title: 更新属性值请求
+    type: object
+    properties:
+      address:
+        description: ''
+        example: Ronda de la Comunicacion s/n
+        type: string
+      zipCode:
+        description: ''
+        example: 28050
+        type: integer
+        format: int32
+      city:
+        description: ''
+        example: Madrid
+        type: string
+      country:
+        description: ''
+        example: Spain
+        type: string
+    required:
+      - address
+      - zipCode
+      - city
+      - country
+  Options20:
+    title: options20
+    example: count
+    x-enum-elements:
+      - name: count
+        description: ''
+      - name: values
+        description: ''
+    type: string
+    enum:
+      - count
+      - values
+  ListEntityTypesResponse:
+    title: 列出实体类型响应
+    example:
+      type: Car
+      attrs:
+        speed:
+          types:
+            - Number
+        fuel:
+          types:
+            - gasoline
+            - diesel
+        temperature:
+          types:
+            - 'urn:phenomenum:temperature'
+      count: 12
+    type: object
+    properties:
+      type:
+        description: ''
+        example: Car
+        type: string
+      attrs:
+        description: ''
+        example:
+          speed:
+            types:
+              - Number
+          fuel:
+            types:
+              - 汽油
+              - 柴油
+          temperature:
+            types:
+              - 'urn:phenomenum:temperature'
+        type: object
+      count:
+        description: ''
+        example: 12
+        type: integer
+        format: int32
+    required:
+      - type
+      - attrs
+      - count
+  RetrieveEntityTypeResponse:
+    title: 检索实体类型响应
+    example:
+      attrs:
+        pressure:
+          types:
+            - Number
+        humidity:
+          types:
+            - percentage
+        temperature:
+          types:
+            - 'urn:phenomenum:temperature'
+      count: 7
+    type: object
+    properties:
+      attrs:
+        description: ''
+        example:
+          pressure:
+            types:
+              - Number
+          humidity:
+            types:
+              - percentage
+          temperature:
+            types:
+              - 'urn:phenomenum:temperature'
+        type: object
+      count:
+        description: ''
+        example: 7
+        type: integer
+        format: int32
+    required:
+      - attrs
+      - count
+  Options23:
+    title: options23
+    example: count
+    x-enum-elements:
+      - name: count
+        description: ''
+    type: string
+    enum:
+      - count
+  ListSubscriptionsResponse:
+    title: 列表订阅响应
+    example:
+      id: abcdefg
+      description: One subscription to rule them all
+      subject:
+        entities:
+          - id: Bcn_Welt
+            type: Room
+        condition:
+          attrs:
+            - 'temperature '
+          expression:
+            q: temperature>40
+      notification:
+        httpCustom:
+          url: 'http://localhost:1234'
+          headers:
+            X-MyHeader: foo
+          qs:
+            authToken: bar
+        attrsFormat: keyValues
+        attrs:
+          - temperature
+          - humidity
+        timesSent: 12
+        lastNotification: '2015-10-05T16:00:00Z'
+        lastFailure: '2015-10-06T16:00:00Z'
+      expires: '2016-04-05T14:00:00Z'
+      status: failed
+      throttling: 5
+    type: object
+    properties:
+      id:
+        description: ''
+        example: abcdefg
+        type: string
+      description:
+        description: ''
+        example: One subscription to rule them all
+        type: string
+      subject:
+        description: ''
+        example:
+          entities:
+            - id: Bcn_Welt
+              type: Room
+          condition:
+            attrs:
+              - 'temperature '
+            expression:
+              q: temperature>40
+        type: object
+      notification:
+        description: ''
+        example:
+          httpCustom:
+            url: 'http://localhost:1234'
+            headers:
+              X-MyHeader: foo
+            qs:
+              authToken: bar
+          attrsFormat: keyValues
+          attrs:
+            - temperature
+            - humidity
+          timesSent: 12
+          lastNotification: '2015-10-05T16:00:00Z'
+          lastFailure: '2015-10-06T16:00:00Z'
+        type: object
+      expires:
+        description: ''
+        example: '4/5/2016 2:00:00 PM'
+        type: string
+      status:
+        description: ''
+        example: failed
+        type: string
+      throttling:
+        description: ''
+        example: 5
+        type: integer
+        format: int32
+    required:
+      - id
+      - description
+      - subject
+      - notification
+      - expires
+      - status
+      - throttling
+  CreateSubscriptionRequest:
+    title: 创建订阅请求
+    type: object
+    properties:
+      description:
+        description: ''
+        example: One subscription to rule them all
+        type: string
+      subject:
+        description: ''
+        example:
+          entities:
+            - idPattern: .*
+              type: Room
+          condition:
+            attrs:
+              - temperature
+            expression:
+              q: temperature>40
+        type: object
+      notification:
+        description: ''
+        example:
+          http:
+            url: 'http://localhost:1234'
+          attrs:
+            - temperature
+            - humidity
+        type: object
+      expires:
+        description: ''
+        example: '4/5/2016 2:00:00 PM'
+        type: string
+      throttling:
+        description: ''
+        example: 5
+        type: integer
+        format: int32
+    required:
+      - description
+      - subject
+      - notification
+      - expires
+      - throttling
+  UpdateSubscriptionRequest:
+    title: 更新订阅请求
+    type: object
+    properties:
+      expires:
+        description: ''
+        example: '4/5/2016 2:00:00 PM'
+        type: string
+    required:
+      - expires
+  ListRegistrationsResponse:
+    title: 列表注册响应
+    example:
+      id: abcdefg
+      description: 示例上下文源
+      dataProvided:
+        entities:
+          - id: Bcn_Welt
+            type: Room
+        attrs:
+          - temperature
+      provider:
+        http:
+          url: 'http://contextsource.example.org'
+        supportedForwardingMode: all
+      expires: '2017-10-31T12:00:00'
+      status: active
+      forwardingInformation:
+        timesSent: 12
+        lastForwarding: '2017-10-06T16:00:00Z'
+        lastSuccess: '2017-10-06T16:00:00Z'
+        lastFailure: '2017-10-05T16:00:00Z'
+    type: object
+    properties:
+      id:
+        description: ''
+        example: abcdefg
+        type: string
+      description:
+        description: ''
+        example: Example Context Source
+        type: string
+      dataProvided:
+        description: ''
+        example:
+          entities:
+            - id: Bcn_Welt
+              type: Room
+          attrs:
+            - temperature
+        type: object
+      provider:
+        description: ''
+        example:
+          http:
+            url: 'http://contextsource.example.org'
+          supportedForwardingMode: all
+        type: object
+      expires:
+        description: ''
+        example: '10/31/2017 12:00:00 PM'
+        type: string
+      status:
+        description: ''
+        example: active
+        type: string
+      forwardingInformation:
+        description: ''
+        example:
+          timesSent: 12
+          lastForwarding: '2017-10-06T16:00:00Z'
+          lastSuccess: '2017-10-06T16:00:00Z'
+          lastFailure: '2017-10-05T16:00:00Z'
+        type: object
+    required:
+      - id
+      - description
+      - dataProvided
+      - provider
+      - expires
+      - status
+      - forwardingInformation
+  CreateRegistrationRequest:
+    title: 创建注册请求
+    type: object
+    properties:
+      description:
+        description: ''
+        example: Relative Humidity Context Source
+        type: string
+      dataProvided:
+        description: ''
+        example:
+          entities:
+            - id: room2
+              type: Room
+          attrs:
+            - relativeHumidity
+        type: object
+      provider:
+        description: ''
+        example:
+          http:
+            url: 'http://localhost:1234'
+        type: object
+    required:
+      - description
+      - dataProvided
+      - provider
+  RetrieveRegistrationResponse:
+    title: 检索注册响应
+    example:
+      id: abcdefg
+      description: Example Context Source
+      dataProvided:
+        entities:
+          - id: Bcn_Welt
+            type: Room
+        attrs:
+          - temperature
+      provider:
+        http:
+          url: 'http://contextsource.example.org'
+        supportedForwardingMode: all
+      expires: '2017-10-31T12:00:00'
+      status: failed
+      forwardingInformation:
+        timesSent: 12
+        lastForwarding: '2017-10-06T16:00:00Z'
+        lastFailure: '2017-10-06T16:00:00Z'
+        lastSuccess: '2017-10-05T18:25:00Z'
+    type: object
+    properties:
+      id:
+        description: ''
+        example: abcdefg
+        type: string
+      description:
+        description: ''
+        example: Example Context Source
+        type: string
+      dataProvided:
+        description: ''
+        example:
+          entities:
+            - id: Bcn_Welt
+              type: Room
+          attrs:
+            - temperature
+        type: object
+      provider:
+        description: ''
+        example:
+          http:
+            url: 'http://contextsource.example.org'
+          supportedForwardingMode: all
+        type: object
+      expires:
+        description: ''
+        example: '10/31/2017 12:00:00 PM'
+        type: string
+      status:
+        description: ''
+        example: failed
+        type: string
+      forwardingInformation:
+        description: ''
+        example:
+          timesSent: 12
+          lastForwarding: '2017-10-06T16:00:00Z'
+          lastFailure: '2017-10-06T16:00:00Z'
+          lastSuccess: '2017-10-05T18:25:00Z'
+        type: object
+    required:
+      - id
+      - description
+      - dataProvided
+      - provider
+      - expires
+      - status
+      - forwardingInformation
+  UpdateRegistrationRequest:
+    title: 更新注册请求
+    type: object
+    properties:
+      expires:
+        description: ''
+        example: '10/4/2017 12:00:00 AM'
+        type: string
+    required:
+      - expires
+  UpdateRequest:
+    title: Update request
+    type: object
+    properties:
+      actionType:
+        description: ''
+        example: append
+        type: string
+      entities:
+        description: ''
+        example:
+          - type: Room
+            id: Bcn-Welt
+            temperature:
+              value: 21.7
+            humidity:
+              value: 60
+          - type: Room
+            id: Mad_Aud
+            temperature:
+              value: 22.9
+            humidity:
+              value: 85
+        type: array
+        items:
+          type: object
+    required:
+      - actionType
+      - entities
+  QueryRequest:
+    title: 查询请求
+    type: object
+    properties:
+      entities:
+        description: ''
+        example:
+          - idPattern: .*
+            type: Room
+          - id: Car
+            type: P-9873-K
+        type: array
+        items:
+          type: object
+      attrs:
+        description: ''
+        example:
+          - temperature
+          - humidity
+        type: array
+        items:
+          type: string
+      expression:
+        description: ''
+        example:
+          q: temperature>20
+        type: object
+      metadata:
+        description: ''
+        example:
+          - accuracy
+          - timestamp
+        type: array
+        items:
+          type: string
+    required:
+      - entities
+      - attrs
+      - expression
+      - metadata
+  QueryResponse:
+    title: 查询回复
+    example:
+      type: Room
+      id: DC_S1-D41
+      temperature:
+        value: 35.6
+        type: Number
+    type: object
+    properties:
+      type:
+        description: ''
+        example: Room
+        type: string
+      id:
+        description: ''
+        example: DC_S1-D41
+        type: string
+      temperature:
+        description: ''
+        example:
+          value: 35.6
+          type: Number
+        type: object
+    required:
+      - type
+      - id
+      - temperature
+  NotifyRequest:
+    title: 通知请求
+    type: object
+    properties:
+      subscriptionId:
+        description: ''
+        example: 5aeb0ee97d4ef10a12a0262f
+        type: string
+      data:
+        description: ''
+        example:
+          - type: Room
+            id: DC_S1-D41
+            temperature:
+              value: 35.6
+              type: Number
+          - type: Room
+            id: Boe-Idearium
+            temperature:
+              value: 22.5
+              type: Number
+        type: array
+        items:
+          type: object
+    required:
+      - subscriptionId
+      - data
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+basePath: /ten2net/NGSI/1.0.0
+schemes:
+ - https
+ - http
