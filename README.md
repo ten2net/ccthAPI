@@ -1,3 +1,7 @@
+## swaggerhub地址
+
+- https://app.swaggerhub.com/apis/ccthiot/NGSI/1.0.0
+
 ## Welcome to GitHub Pages
 
 You can use the [editor on GitHub](https://github.com/ten2net/ccthAPI/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
