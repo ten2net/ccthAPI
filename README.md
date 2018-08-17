@@ -6,43 +6,96 @@
 
 - https://fiware-orion.readthedocs.io/en/latest/index.html
 
-## 
+## smartsdk/ngsi-timeseries-api: QuantumLeap: a Timeseries NGSI backend
+- https://github.com/smartsdk/ngsi-timeseries-api
 
+### docker-compose-dev.yml
+```yaml
+version: '3'
 
-## Welcome to GitHub Pages
+services:
 
-You can use the [editor on GitHub](https://github.com/ten2net/ccthAPI/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+  orion:
+    image: fiware/orion:1.13.0
+    ports:
+      - "11026:1026"
+    command: -logLevel DEBUG -noCache -dbhost mongo
+    depends_on:
+      - mongo
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:1026/version"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+  mongo:
+    image: mongo:3.2
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodata:/data/db
 
-### Markdown
+  quantumleap:
+    image: ${QL_IMAGE:-smartsdk/quantumleap}
+    ports:
+      - "8668:8668"
+    depends_on:
+      - mongo
+      - orion
+      - crate
+    environment:
+      - CRATE_HOST=${CRATE_HOST:-crate}
+      - USE_GEOCODING=True
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+  crate:
+    image: crate:1.0.5
+    ports:
+      # Admin UI
+      - "4200:4200"
+      # Transport protocol
+      - "4300:4300"
+    command: -Ccluster.name=democluster -Chttp.cors.enabled=true -Chttp.cors.allow-origin="*"
+    volumes:
+      - cratedata:/data
 
-```markdown
-Syntax highlighted code block
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "4000:3000"
+    environment:
+      - GF_INSTALL_PLUGINS=crate-datasource,grafana-clock-panel,grafana-worldmap-panel
+    depends_on:
+      - crate
 
-# Header 1
-## Header 2
-### Header 3
+  redis:
+    image: redis
+    deploy:
+      # Scaling Redis requires some extra work.
+      # See https://get-reddie.com/blog/redis4-cluster-docker-compose/
+      replicas: 1
+    ports:
+      - "7379:6379"
+    volumes:
+      - redisdata:/data
 
-- Bulleted
-- List
+volumes:
+  mongodata:
+  cratedata:
+  redisdata:
 
-1. Numbered
-2. List
+networks:
+    ngsi:
+        driver_opts:
+            com.docker.network.driver.mtu: ${DOCKER_MTU:-1400}
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
-### Jekyll Themes
+### 使用postman测试API的范例
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/ten2net/ccthAPI/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+- https://github.com/ten2net/ccthAPI/blob/master/NGSI.postman_collection.json
 
-### Support or Contact
+> 下载[postman](https://www.getpostman.com/apps)，打开postman工具，文件/导入……
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
