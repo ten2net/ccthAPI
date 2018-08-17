@@ -1,0 +1,139 @@
+{
+	"variables": [],
+	"info": {
+		"name": "NGSI",
+		"_postman_id": "865bc8e3-e000-8f5b-29b9-7b8fe7a61ed4",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "创建实体",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/entities",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"id\": \"Room7\",\r\n  \"type\": \"Room\",\r\n  \"temperature\": {\r\n    \"value\": 36,\r\n    \"type\": \"Float\"\r\n  },\r\n  \"pressure\": {\r\n    \"value\": 711,\r\n    \"type\": \"Integer\"\r\n  },\r\n  \"hud\": {\r\n    \"value\": 45,\r\n    \"type\": \"Integer\"\r\n  }  \r\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "查询Room2实体",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/entities/Room2?options=values&attrs=pressure,temperature",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "实体属性查询",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/entities/Room1/attrs/pressure/value",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "查询类型为city的实体",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/entities?options=values&type=city",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "查询id为Room开头后跟2和4之间数字构成的实体",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/entities?idPattern=^Room[2-4]",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "西槎路温度在33到35之间的实体",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/entities?q=temperature!=33..35",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "查询具有hud属性的实体列出内置属性和指定属性",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/entities?q=hud&attrs=dateModified,temperature,hud",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "显示全部订阅",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/subscriptions",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "查询可用的API",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "增加一个订阅",
+			"request": {
+				"url": "http://192.168.15.100:11026/v2/subscriptions",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n        \"description\": \"Test subscription\",\r\n        \"subject\": {\r\n            \"entities\": [\r\n            {\r\n                \"idPattern\": \".*\",\r\n                \"type\": \"Room\"\r\n            }\r\n            ],\r\n            \"condition\": {\r\n                \"attrs\": [\r\n                \"temperature\"\r\n                ]\r\n            }\r\n        },\r\n        \"notification\": {\r\n            \"http\": {\r\n                \"url\": \"http://192.168.15.100:8668/v2/notify\"\r\n            },\r\n            \"attrs\": [\r\n            \"temperature\"\r\n            ],\r\n            \"metadata\": [\"dateCreated\", \"dateModified\"]\r\n        },\r\n        \"throttling\": 5\r\n    }"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
